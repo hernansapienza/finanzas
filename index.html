@@ -189,8 +189,16 @@ function todayISO() {
     String(d.getDate()).padStart(2,'0');
 }
 function ddisp(iso) {
-  var p = iso.split('-');
+  // Handle Date objects or strings like "2026-02-24T03:00:00.000Z"
+  var s = String(iso).substring(0, 10);
+  var p = s.split('-');
+  if (p.length !== 3) return String(iso);
   return p[2]+'/'+p[1]+'/'+p[0];
+}
+function toISO(val) {
+  // Normalize any date value to YYYY-MM-DD string
+  var s = String(val).substring(0, 10);
+  return s;
 }
 
 // ── STATUS BAR ──
@@ -231,7 +239,9 @@ function loadFromSheet() {
   setBtns(true);
   apiGet().then(function(res) {
     if (res.records && res.records.length > 0) {
-      cache = res.records;
+      cache = res.records.map(function(r) {
+        return {date:toISO(r.date), caja:r.caja, balanz:r.balanz, fci:r.fci||0, total:r.total};
+      });
       seeded = true;
       setStatus('ok', 'Conectado \u2022 ' + cache.length + ' registros');
       renderAll();
