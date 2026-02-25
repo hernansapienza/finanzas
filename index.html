@@ -131,11 +131,7 @@ tbody td:not(:first-child){text-align:right}
   <div class="brow">
     <button class="btn btn-s" id="saveBtn" onclick="saveRecord()">&#x1F4BE; Guardar hoy</button>
   </div>
-  <div class="brow" style="margin-top:0">
-    <button class="btn btn-i" onclick="document.getElementById('fi').click()">&#x1F4C2; Importar CSV</button>
-    <button class="btn btn-c" onclick="exportCSV()">&#x2B07; Exportar CSV</button>
-  </div>
-  <input type="file" id="fi" accept=".csv" onchange="importCSV(event)">
+
   <div class="status-bar">
     <div class="dot" id="sdot"></div>
     <span id="stxt">Conectando con Google Sheets...</span>
@@ -157,7 +153,10 @@ tbody td:not(:first-child){text-align:right}
 </div>
 
 <div class="tcrd">
-  <div class="th"><span class="tt">Hist&#xF3;rico d&#xED;a a d&#xED;a</span></div>
+  <div class="th">
+    <span class="tt">Hist&#xF3;rico d&#xED;a a d&#xED;a</span>
+    <button class="btn btn-c" style="flex:none;padding:.4rem .8rem;font-size:.62rem" onclick="exportCSV()">&#x2B07; Exportar CSV</button>
+  </div>
   <div class="tw">
     <table>
       <thead><tr><th>Fecha</th><th>Caja</th><th>Balanz</th><th>FCI</th><th>Total</th><th></th></tr></thead>
