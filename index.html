@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Finanzas">
+<title>Finanzas Personales</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f14;--surface:#141720;--surface2:#181d28;
+  --border:#252a35;--border-light:#2e3547;
+  --gold:#c9a84c;--gold-dim:#8a7035;
+  --green:#4ade80;--green-dim:#166534;
+  --blue:#60a5fa;--text:#e8eaf0;--muted:#6b7280;--red:#f87171;
+}
+html,body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;
+  background-image:radial-gradient(ellipse at 15% 15%,rgba(201,168,76,.05) 0%,transparent 55%),
+  radial-gradient(ellipse at 85% 85%,rgba(96,165,250,.04) 0%,transparent 55%)}
+.page{max-width:520px;margin:0 auto;padding:1.5rem 1rem 3rem;display:flex;flex-direction:column;gap:1.25rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.75rem 1.5rem;
+  box-shadow:0 0 0 1px rgba(255,255,255,.03),0 20px 48px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.05)}
+.header{text-align:center;margin-bottom:1.5rem}
+.emojis{font-size:1.7rem;display:block;margin-bottom:.5rem;letter-spacing:.08em}
+.title{font-family:'Playfair Display',serif;color:var(--gold);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase}
+.slabel{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
+.row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;gap:.75rem}
+.lbl{font-size:.82rem;color:var(--muted);min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iw{display:flex;align-items:center;gap:.35rem;background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:8px;padding:.4rem .65rem;transition:border-color .2s,box-shadow .2s;flex:1;max-width:170px}
+.iw:focus-within{border-color:var(--gold-dim);box-shadow:0 0 0 3px rgba(201,168,76,.08)}
+.cur{color:var(--gold);font-size:.78rem;font-weight:500;user-select:none}
+input[type=number]{background:transparent;border:none;outline:none;color:var(--text);
+  font-family:'DM Mono',monospace;font-size:.88rem;width:100%;text-align:right;-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+hr.div{border:none;border-top:1px solid var(--border);margin:.75rem 0}
+hr.thick{border-top-color:var(--border-light)}
+.tbox{border-radius:8px;padding:.7rem .9rem;margin:.4rem 0;display:flex;align-items:center;
+  justify-content:space-between;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.18)}
+.tlbl{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase}
+.tval{font-size:1.05rem;font-weight:500;color:var(--gold)}
+.brow{display:flex;gap:.6rem;margin-top:1.1rem}
+.btn{flex:1;padding:.75rem .5rem;border-radius:10px;border:none;cursor:pointer;
+  font-family:'DM Mono',monospace;font-size:.72rem;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.4rem}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none !important}
+.btn-s{background:linear-gradient(135deg,var(--gold-dim),#6b5422);border:1px solid var(--gold-dim);color:#f5e6c0}
+.btn-s:hover:not(:disabled){background:linear-gradient(135deg,#a07a30,#8a6424);transform:translateY(-1px);
+  box-shadow:0 6px 20px rgba(201,168,76,.15)}
+.btn-s.ok{background:linear-gradient(135deg,var(--green-dim),#14532d);border-color:var(--green-dim);color:var(--green)}
+.btn-c{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);color:var(--blue)}
+.btn-c:hover:not(:disabled){background:rgba(96,165,250,.15);transform:translateY(-1px)}
+.btn-i{background:rgba(255,255,255,.04);border:1px solid var(--border-light);color:var(--muted)}
+.btn-i:hover:not(:disabled){background:rgba(255,255,255,.07);color:var(--text);transform:translateY(-1px)}
+.smsg{font-size:.68rem;color:var(--muted);text-align:center;margin-top:.5rem;min-height:1.2em}
+.smsg.err{color:var(--red)}
+.status-bar{display:flex;align-items:center;gap:.5rem;font-size:.62rem;color:var(--muted);
+  padding:.5rem .75rem;background:rgba(255,255,255,.03);border-radius:8px;margin-top:.75rem}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.dot.ok{background:var(--green)}
+.dot.err{background:var(--red)}
+.dot.loading{background:var(--gold);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem;
+  box-shadow:0 0 0 1px rgba(255,255,255,.03),0 12px 32px rgba(0,0,0,.4)}
+.ch{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.4rem}
+.ct{font-family:'Playfair Display',serif;color:var(--gold);font-size:.9rem}
+.cs{font-size:.62rem;color:var(--muted)}
+.leg{display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:.35rem;font-size:.65rem;color:var(--muted)}
+.ld{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.cw{position:relative;height:220px}
+.tcrd{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(255,255,255,.03)}
+.th{padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border)}
+.tt{font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+.tw{overflow-x:auto;max-height:260px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:.74rem}
+thead th{position:sticky;top:0;background:var(--surface2);padding:.55rem .65rem;text-align:left;
+  font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s}
+tbody tr:hover{background:rgba(255,255,255,.03)}
+tbody td{padding:.5rem .65rem;white-space:nowrap}
+tbody td:not(:first-child){text-align:right}
+.dt{color:var(--muted)}
+.dtt{color:var(--gold);font-weight:500}
+.xb{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.72rem;
+  padding:.1rem .3rem;border-radius:4px;transition:color .15s,background .15s}
+.xb:hover{color:var(--red);background:rgba(248,113,113,.1)}
+.es{padding:2rem;text-align:center;color:var(--muted);font-size:.76rem;line-height:1.9}
+#fi{display:none}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="card">
+  <div class="header">
+    <span class="emojis">&#x1F4B5; &#x1F4B8; &#x1F911; &#x1F3E6;</span>
+    <div class="title">Resumen Financiero</div>
+  </div>
+  <div class="slabel">Activos</div>
+  <div class="row">
+    <span class="lbl">Caja de Seguridad</span>
+    <div class="iw"><span class="cur">$</span><input type="number" id="caja" placeholder="0.00" step="0.01" min="0"></div>
+  </div>
+  <div class="row">
+    <span class="lbl">Balanz</span>
+    <div class="iw"><span class="cur">$</span><input type="number" id="balanz" placeholder="0.00" step="0.01" min="0"></div>
+  </div>
+  <div class="row">
+    <span class="lbl">FCI Banco Galicia</span>
+    <div class="iw"><span class="cur">$</span><input type="number" id="fci" placeholder="0.00" step="0.01" min="0"></div>
+  </div>
+  <hr class="div thick">
+  <div class="tbox">
+    <span class="tlbl">Total</span>
+    <span class="tval" id="total">$ 0.00</span>
+  </div>
+  <div class="brow">
+    <button class="btn btn-s" id="saveBtn" onclick="saveRecord()">&#x1F4BE; Guardar hoy</button>
+  </div>
+  <div class="brow" style="margin-top:0">
+    <button class="btn btn-i" onclick="document.getElementById('fi').click()">&#x1F4C2; Importar CSV</button>
+    <button class="btn btn-c" onclick="exportCSV()">&#x2B07; Exportar CSV</button>
+  </div>
+  <input type="file" id="fi" accept=".csv" onchange="importCSV(event)">
+  <div class="status-bar">
+    <div class="dot" id="sdot"></div>
+    <span id="stxt">Conectando con Google Sheets...</span>
+  </div>
+  <div class="smsg" id="smsg"></div>
+</div>
+
+<div class="chart-card">
+  <div class="ch">
+    <span class="ct">Evoluci&#xF3;n del Portfolio</span>
+    <span class="cs" id="cr">&#x2014;</span>
+  </div>
+  <div class="leg">
+    <div class="li"><div class="ld" style="background:#60a5fa"></div>Balanz</div>
+    <div class="li"><div class="ld" style="background:#c9a84c"></div>Caja</div>
+    <div class="li"><div class="ld" style="background:#4ade80"></div>FCI Galicia</div>
+  </div>
+  <div class="cw"><canvas id="myChart"></canvas></div>
+</div>
+
+<div class="tcrd">
+  <div class="th"><span class="tt">Hist&#xF3;rico d&#xED;a a d&#xED;a</span></div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Fecha</th><th>Caja</th><th>Balanz</th><th>FCI</th><th>Total</th><th></th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table>
+    <div class="es" id="es">Cargando...</div>
+  </div>
+</div>
+
+</div>
+<script>
+var API = 'https://script.google.com/macros/s/AKfycbwE6xyygPRnWe24T_qI9VmjWBJU4vM7HU4giTuoztcJY99xWeajf6KkK_Uq_i9-eIPI/exec';
+
+// Local cache so UI stays snappy
+var cache = [];
+var seeded = false;
+
+// ── SEED DATA (CSV historico) ──
+var SEED = [{"date":"2024-02-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-02-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-02-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-02-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-02-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-02-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-02-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-02-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-02-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-03-31","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-04-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-05-31","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-06-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-07-31","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-08-31","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-09-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-10-31","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-11-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2024-12-31","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-01-31","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-02-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-03-31","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-04-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-05-31","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-06-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-07-31","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-08-31","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-01","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-02","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-03","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-04","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-05","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-06","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-07","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-08","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-09","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-10","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-11","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-12","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-13","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-14","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-15","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-16","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-17","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-18","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-19","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-20","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-21","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-22","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-23","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-24","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-25","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-26","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-27","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-28","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-09-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},{"date":"2025-10-01","caja":14058.0,"balanz":31609.0,"fci":0.0,"total":45667.0},{"date":"2025-10-02","caja":14058.0,"balanz":32234.0,"fci":0.0,"total":46292.0},{"date":"2025-10-03","caja":14058.0,"balanz":32046.0,"fci":0.0,"total":46104.0},{"date":"2025-10-04","caja":14058.0,"balanz":32046.0,"fci":0.0,"total":46104.0},{"date":"2025-10-05","caja":14058.0,"balanz":32046.0,"fci":0.0,"total":46104.0},{"date":"2025-10-06","caja":14058.0,"balanz":31946.0,"fci":0.0,"total":46004.0},{"date":"2025-10-07","caja":14058.0,"balanz":31671.0,"fci":0.0,"total":45729.0},{"date":"2025-10-08","caja":14058.0,"balanz":31916.0,"fci":0.0,"total":45974.0},{"date":"2025-10-09","caja":14058.0,"balanz":33133.0,"fci":0.0,"total":47191.0},{"date":"2025-10-10","caja":14058.0,"balanz":33133.0,"fci":0.0,"total":47191.0},{"date":"2025-10-11","caja":14058.0,"balanz":33133.0,"fci":0.0,"total":47191.0},{"date":"2025-10-12","caja":14058.0,"balanz":33133.0,"fci":0.0,"total":47191.0},{"date":"2025-10-13","caja":14058.0,"balanz":32830.0,"fci":0.0,"total":46888.0},{"date":"2025-10-14","caja":14058.0,"balanz":32669.0,"fci":0.0,"total":46727.0},{"date":"2025-10-15","caja":14058.0,"balanz":32322.0,"fci":0.0,"total":46380.0},{"date":"2025-10-16","caja":14058.0,"balanz":32191.0,"fci":0.0,"total":46249.0},{"date":"2025-10-17","caja":14058.0,"balanz":31746.0,"fci":0.0,"total":45804.0},{"date":"2025-10-18","caja":14058.0,"balanz":31746.0,"fci":0.0,"total":45804.0},{"date":"2025-10-19","caja":14058.0,"balanz":31746.0,"fci":0.0,"total":45804.0},{"date":"2025-10-20","caja":14058.0,"balanz":32309.0,"fci":0.0,"total":46367.0},{"date":"2025-10-21","caja":14058.0,"balanz":32048.0,"fci":0.0,"total":46106.0},{"date":"2025-10-22","caja":14058.0,"balanz":31961.0,"fci":0.0,"total":46019.0},{"date":"2025-10-23","caja":14058.0,"balanz":32589.0,"fci":0.0,"total":46647.0},{"date":"2025-10-24","caja":14058.0,"balanz":32608.0,"fci":0.0,"total":46666.0},{"date":"2025-10-25","caja":14058.0,"balanz":32608.0,"fci":0.0,"total":46666.0},{"date":"2025-10-26","caja":14058.0,"balanz":32608.0,"fci":0.0,"total":46666.0},{"date":"2025-10-27","caja":14058.0,"balanz":35363.0,"fci":0.0,"total":49421.0},{"date":"2025-10-28","caja":14058.0,"balanz":35525.0,"fci":0.0,"total":49583.0},{"date":"2025-10-29","caja":14058.0,"balanz":35924.0,"fci":0.0,"total":49982.0},{"date":"2025-10-30","caja":14058.0,"balanz":36016.0,"fci":0.0,"total":50074.0},{"date":"2025-10-31","caja":14058.0,"balanz":36909.0,"fci":0.0,"total":50967.0},{"date":"2025-11-01","caja":14058.0,"balanz":36909.0,"fci":0.0,"total":50967.0},{"date":"2025-11-02","caja":14058.0,"balanz":36909.0,"fci":0.0,"total":50967.0},{"date":"2025-11-03","caja":14058.0,"balanz":37589.0,"fci":0.0,"total":51647.0},{"date":"2025-11-04","caja":14058.0,"balanz":37232.0,"fci":0.0,"total":51290.0},{"date":"2025-11-05","caja":14058.0,"balanz":37639.0,"fci":0.0,"total":51697.0},{"date":"2025-11-06","caja":14058.0,"balanz":37235.0,"fci":0.0,"total":51293.0},{"date":"2025-11-07","caja":14058.0,"balanz":37071.0,"fci":0.0,"total":51129.0},{"date":"2025-11-08","caja":14058.0,"balanz":37071.0,"fci":0.0,"total":51129.0},{"date":"2025-11-09","caja":14058.0,"balanz":37071.0,"fci":0.0,"total":51129.0},{"date":"2025-11-10","caja":14058.0,"balanz":37461.0,"fci":0.0,"total":51519.0},{"date":"2025-11-11","caja":14058.0,"balanz":37694.0,"fci":0.0,"total":51752.0},{"date":"2025-11-12","caja":14058.0,"balanz":37708.0,"fci":0.0,"total":51766.0},{"date":"2025-11-13","caja":14058.0,"balanz":37082.0,"fci":0.0,"total":51140.0},{"date":"2025-11-14","caja":14058.0,"balanz":37825.0,"fci":0.0,"total":51883.0},{"date":"2025-11-15","caja":14058.0,"balanz":37825.0,"fci":0.0,"total":51883.0},{"date":"2025-11-16","caja":14058.0,"balanz":37825.0,"fci":0.0,"total":51883.0},{"date":"2025-11-17","caja":14058.0,"balanz":37489.0,"fci":0.0,"total":51547.0},{"date":"2025-11-18","caja":14058.0,"balanz":37626.0,"fci":0.0,"total":51684.0},{"date":"2025-11-19","caja":14058.0,"balanz":37800.0,"fci":0.0,"total":51858.0},{"date":"2025-11-20","caja":14058.0,"balanz":37401.0,"fci":0.0,"total":51459.0},{"date":"2025-11-21","caja":14058.0,"balanz":37385.0,"fci":0.0,"total":51443.0},{"date":"2025-11-22","caja":14058.0,"balanz":37385.0,"fci":0.0,"total":51443.0},{"date":"2025-11-23","caja":14058.0,"balanz":37385.0,"fci":0.0,"total":51443.0},{"date":"2025-11-24","caja":14058.0,"balanz":37385.0,"fci":0.0,"total":51443.0},{"date":"2025-11-25","caja":14058.0,"balanz":37803.0,"fci":0.0,"total":51861.0},{"date":"2025-11-26","caja":14058.0,"balanz":38314.0,"fci":0.0,"total":52372.0},{"date":"2025-11-27","caja":14058.0,"balanz":38456.0,"fci":0.0,"total":52514.0},{"date":"2025-11-28","caja":14058.0,"balanz":38659.0,"fci":0.0,"total":52717.0},{"date":"2025-11-29","caja":14058.0,"balanz":38659.0,"fci":0.0,"total":52717.0},{"date":"2025-11-30","caja":14058.0,"balanz":38659.0,"fci":0.0,"total":52717.0},{"date":"2025-12-01","caja":14058.0,"balanz":38395.0,"fci":0.0,"total":52453.0},{"date":"2025-12-02","caja":14058.0,"balanz":38721.0,"fci":0.0,"total":52779.0},{"date":"2025-12-03","caja":14058.0,"balanz":39049.0,"fci":0.0,"total":53107.0},{"date":"2025-12-04","caja":14058.0,"balanz":38864.0,"fci":0.0,"total":52922.0},{"date":"2025-12-05","caja":14058.0,"balanz":39119.0,"fci":0.0,"total":53177.0},{"date":"2025-12-06","caja":14058.0,"balanz":39119.0,"fci":0.0,"total":53177.0},{"date":"2025-12-07","caja":14058.0,"balanz":39119.0,"fci":0.0,"total":53177.0},{"date":"2025-12-08","caja":14058.0,"balanz":39119.0,"fci":0.0,"total":53177.0},{"date":"2025-12-09","caja":14058.0,"balanz":38912.0,"fci":0.0,"total":52970.0},{"date":"2025-12-10","caja":14058.0,"balanz":39000.0,"fci":0.0,"total":53058.0},{"date":"2025-12-11","caja":14058.0,"balanz":38953.0,"fci":0.0,"total":53011.0},{"date":"2025-12-12","caja":14058.0,"balanz":38866.0,"fci":0.0,"total":52924.0},{"date":"2025-12-13","caja":14058.0,"balanz":38866.0,"fci":0.0,"total":52924.0},{"date":"2025-12-14","caja":14058.0,"balanz":38866.0,"fci":0.0,"total":52924.0},{"date":"2025-12-15","caja":14058.0,"balanz":38631.0,"fci":0.0,"total":52689.0},{"date":"2025-12-16","caja":14058.0,"balanz":38385.0,"fci":0.0,"total":52443.0},{"date":"2025-12-17","caja":14058.0,"balanz":38581.0,"fci":0.0,"total":52639.0},{"date":"2025-12-18","caja":14058.0,"balanz":39926.0,"fci":0.0,"total":53984.0},{"date":"2025-12-19","caja":14058.0,"balanz":40141.0,"fci":0.0,"total":54199.0},{"date":"2025-12-20","caja":14058.0,"balanz":40141.0,"fci":0.0,"total":54199.0},{"date":"2025-12-21","caja":14058.0,"balanz":40141.0,"fci":0.0,"total":54199.0},{"date":"2025-12-22","caja":14058.0,"balanz":40202.0,"fci":0.0,"total":54260.0},{"date":"2025-12-23","caja":14058.0,"balanz":40350.0,"fci":0.0,"total":54408.0},{"date":"2025-12-24","caja":14058.0,"balanz":40447.0,"fci":0.0,"total":54505.0},{"date":"2025-12-25","caja":14058.0,"balanz":40447.0,"fci":0.0,"total":54505.0},{"date":"2025-12-26","caja":14058.0,"balanz":40381.0,"fci":0.0,"total":54439.0},{"date":"2025-12-27","caja":14058.0,"balanz":40381.0,"fci":0.0,"total":54439.0},{"date":"2025-12-28","caja":14058.0,"balanz":40381.0,"fci":0.0,"total":54439.0},{"date":"2025-12-29","caja":14058.0,"balanz":40364.0,"fci":0.0,"total":54422.0},{"date":"2025-12-30","caja":14058.0,"balanz":40326.0,"fci":0.0,"total":54384.0},{"date":"2025-12-31","caja":14058.0,"balanz":40326.0,"fci":0.0,"total":54384.0},{"date":"2026-01-01","caja":14058.0,"balanz":40326.0,"fci":0.0,"total":54384.0},{"date":"2026-01-02","caja":14058.0,"balanz":40360.0,"fci":0.0,"total":54418.0},{"date":"2026-01-03","caja":14058.0,"balanz":40360.0,"fci":0.0,"total":54418.0},{"date":"2026-01-04","caja":14058.0,"balanz":40360.0,"fci":0.0,"total":54418.0},{"date":"2026-01-05","caja":14058.0,"balanz":40597.0,"fci":0.0,"total":54655.0},{"date":"2026-01-06","caja":14058.0,"balanz":40739.0,"fci":0.0,"total":54797.0},{"date":"2026-01-07","caja":14058.0,"balanz":40122.0,"fci":0.0,"total":54180.0},{"date":"2026-01-08","caja":14058.0,"balanz":40112.0,"fci":0.0,"total":54170.0},{"date":"2026-01-09","caja":14058.0,"balanz":40470.0,"fci":0.0,"total":54528.0},{"date":"2026-01-10","caja":14058.0,"balanz":40470.0,"fci":0.0,"total":54528.0},{"date":"2026-01-11","caja":14058.0,"balanz":40470.0,"fci":0.0,"total":54528.0},{"date":"2026-01-12","caja":14058.0,"balanz":41034.0,"fci":0.0,"total":55092.0},{"date":"2026-01-13","caja":14058.0,"balanz":40512.0,"fci":0.0,"total":54570.0},{"date":"2026-01-14","caja":14058.0,"balanz":40296.0,"fci":0.0,"total":54354.0},{"date":"2026-01-15","caja":14058.0,"balanz":40461.0,"fci":0.0,"total":54519.0},{"date":"2026-01-16","caja":14058.0,"balanz":40510.0,"fci":0.0,"total":54568.0},{"date":"2026-01-17","caja":14058.0,"balanz":40510.0,"fci":0.0,"total":54568.0},{"date":"2026-01-18","caja":14058.0,"balanz":40510.0,"fci":0.0,"total":54568.0},{"date":"2026-01-19","caja":14058.0,"balanz":40408.0,"fci":0.0,"total":54466.0},{"date":"2026-01-20","caja":14058.0,"balanz":40224.0,"fci":0.0,"total":54282.0},{"date":"2026-01-21","caja":14058.0,"balanz":41106.0,"fci":0.0,"total":55164.0},{"date":"2026-01-22","caja":14058.0,"balanz":41367.0,"fci":0.0,"total":55425.0},{"date":"2026-01-23","caja":14058.0,"balanz":41494.0,"fci":0.0,"total":55552.0},{"date":"2026-01-24","caja":14058.0,"balanz":41494.0,"fci":0.0,"total":55552.0},{"date":"2026-01-25","caja":14058.0,"balanz":41494.0,"fci":0.0,"total":55552.0},{"date":"2026-01-26","caja":14058.0,"balanz":41731.0,"fci":0.0,"total":55789.0},{"date":"2026-01-27","caja":14058.0,"balanz":42514.0,"fci":0.0,"total":56572.0},{"date":"2026-01-28","caja":14058.0,"balanz":42636.0,"fci":0.0,"total":56694.0},{"date":"2026-01-29","caja":14058.0,"balanz":42432.0,"fci":0.0,"total":56490.0},{"date":"2026-01-30","caja":14058.0,"balanz":42238.0,"fci":0.0,"total":56296.0},{"date":"2026-01-31","caja":14058.0,"balanz":42238.0,"fci":0.0,"total":56296.0},{"date":"2026-02-01","caja":14058.0,"balanz":42238.0,"fci":0.0,"total":56296.0},{"date":"2026-02-02","caja":14058.0,"balanz":42057.0,"fci":0.0,"total":56115.0},{"date":"2026-02-03","caja":14058.0,"balanz":41193.0,"fci":0.0,"total":55251.0},{"date":"2026-02-04","caja":14058.0,"balanz":41000.0,"fci":0.0,"total":55058.0},{"date":"2026-02-05","caja":14058.0,"balanz":40589.0,"fci":0.0,"total":54647.0},{"date":"2026-02-06","caja":14058.0,"balanz":40782.0,"fci":0.0,"total":54840.0},{"date":"2026-02-07","caja":14058.0,"balanz":40782.0,"fci":0.0,"total":54840.0},{"date":"2026-02-08","caja":14058.0,"balanz":40782.0,"fci":0.0,"total":54840.0},{"date":"2026-02-09","caja":14058.0,"balanz":41127.0,"fci":0.0,"total":55185.0},{"date":"2026-02-10","caja":14058.0,"balanz":41340.0,"fci":0.0,"total":55398.0},{"date":"2026-02-11","caja":14058.0,"balanz":41287.0,"fci":0.0,"total":55345.0},{"date":"2026-02-12","caja":14058.0,"balanz":40804.0,"fci":0.0,"total":54862.0},{"date":"2026-02-13","caja":14058.0,"balanz":40692.0,"fci":0.0,"total":54750.0},{"date":"2026-02-14","caja":14058.0,"balanz":40692.0,"fci":0.0,"total":54750.0},{"date":"2026-02-15","caja":14058.0,"balanz":40692.0,"fci":0.0,"total":54750.0},{"date":"2026-02-16","caja":14058.0,"balanz":40692.0,"fci":0.0,"total":54750.0},{"date":"2026-02-17","caja":14058.0,"balanz":40692.0,"fci":0.0,"total":54750.0},{"date":"2026-02-18","caja":14058.0,"balanz":40489.0,"fci":0.0,"total":54547.0},{"date":"2026-02-19","caja":14058.0,"balanz":41569.0,"fci":0.0,"total":55627.0},{"date":"2026-02-20","caja":14058.0,"balanz":42080.0,"fci":0.0,"total":56138.0},{"date":"2026-02-21","caja":14058.0,"balanz":42080.0,"fci":0.0,"total":56138.0},{"date":"2026-02-22","caja":14058.0,"balanz":42080.0,"fci":0.0,"total":56138.0},{"date":"2026-02-23","caja":14058.0,"balanz":41253.0,"fci":0.0,"total":55311.0},{"date":"2026-02-24","caja":4058.0,"balanz":41712.0,"fci":10000.0,"total":55770.0}];
+
+// ── UTILS ──
+function fmt(n) {
+  return '$ ' + Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function todayISO() {
+  var d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+function ddisp(iso) {
+  var p = iso.split('-');
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+
+// ── STATUS BAR ──
+function setStatus(state, txt) {
+  var dot = document.getElementById('sdot');
+  var stxt = document.getElementById('stxt');
+  dot.className = 'dot' + (state ? ' '+state : '');
+  stxt.textContent = txt;
+}
+
+// ── CALC ──
+function calc() {
+  var c = parseFloat(document.getElementById('caja').value) || 0;
+  var b = parseFloat(document.getElementById('balanz').value) || 0;
+  var f = parseFloat(document.getElementById('fci').value) || 0;
+  document.getElementById('total').textContent = fmt(c+b+f);
+}
+['caja','balanz','fci'].forEach(function(id) {
+  document.getElementById(id).addEventListener('input', calc);
+});
+
+// ── API CALLS ──
+function apiGet() {
+  return fetch(API + '?action=get')
+    .then(function(r) { return r.json(); });
+}
+
+function apiPost(body) {
+  return fetch(API, {
+    method: 'POST',
+    body: JSON.stringify(body)
+  }).then(function(r) { return r.json(); });
+}
+
+// ── LOAD FROM SHEET ──
+function loadFromSheet() {
+  setStatus('loading', 'Cargando datos...');
+  setBtns(true);
+  apiGet().then(function(res) {
+    if (res.records && res.records.length > 0) {
+      cache = res.records;
+      seeded = true;
+      setStatus('ok', 'Conectado \u2022 ' + cache.length + ' registros');
+      renderAll();
+      setBtns(false);
+    } else {
+      // Sheet empty — seed it with historical data
+      setStatus('loading', 'Cargando datos hist\u00f3ricos en Sheets...');
+      apiPost({action: 'seed', records: SEED}).then(function(r2) {
+        cache = SEED.slice();
+        seeded = true;
+        setStatus('ok', 'Datos hist\u00f3ricos cargados \u2022 ' + cache.length + ' registros');
+        renderAll();
+        setBtns(false);
+      }).catch(function(e) {
+        cache = SEED.slice();
+        seeded = true;
+        setStatus('err', 'Sheets no disponible \u2014 modo offline');
+        renderAll();
+        setBtns(false);
+      });
+    }
+  }).catch(function(err) {
+    // Offline fallback: use seed
+    cache = SEED.slice();
+    seeded = true;
+    setStatus('err', 'Sin conexi\u00f3n \u2014 modo offline');
+    renderAll();
+    setBtns(false);
+  });
+}
+
+function setBtns(disabled) {
+  ['saveBtn'].forEach(function(id) {
+    document.getElementById(id).disabled = disabled;
+  });
+}
+
+// ── SAVE RECORD ──
+function saveRecord() {
+  var c = parseFloat(document.getElementById('caja').value) || 0;
+  var b = parseFloat(document.getElementById('balanz').value) || 0;
+  var f = parseFloat(document.getElementById('fci').value) || 0;
+  var t = c + b + f;
+  var td = todayISO();
+  var rec = {date:td, caja:c, balanz:b, fci:f, total:t};
+
+  // Update local cache immediately
+  var idx = cache.findIndex(function(r){return r.date===td;});
+  if (idx >= 0) cache[idx] = rec; else cache.push(rec);
+  cache.sort(function(a,b){return a.date < b.date ? -1 : 1;});
+  renderAll();
+
+  var btn = document.getElementById('saveBtn');
+  var msg = document.getElementById('smsg');
+  btn.textContent = '\u2713 Guardado'; btn.classList.add('ok');
+  msg.textContent = '';
+  setStatus('loading', 'Guardando en Sheets...');
+
+  apiPost({action:'upsert', record:rec}).then(function(res) {
+    if (res.ok) {
+      setStatus('ok', 'Guardado en Sheets \u2022 ' + cache.length + ' registros');
+      msg.textContent = 'Registro del ' + ddisp(td) + ' guardado.';
+    } else {
+      setStatus('err', 'Error al guardar en Sheets');
+      msg.className = 'smsg err';
+      msg.textContent = 'Error: ' + (res.error || 'desconocido');
+    }
+  }).catch(function() {
+    setStatus('err', 'Sin conexi\u00f3n \u2014 guardado solo localmente');
+    msg.textContent = 'Guardado localmente (sin conexi\u00f3n).';
+  });
+
+  setTimeout(function(){
+    btn.innerHTML='&#x1F4BE; Guardar hoy'; btn.classList.remove('ok');
+    setTimeout(function(){ msg.textContent=''; msg.className='smsg'; }, 3000);
+  }, 2000);
+}
+
+// ── DELETE ──
+function delRec(date) {
+  if (!confirm('Eliminar el registro del ' + ddisp(date) + '?')) return;
+  cache = cache.filter(function(r){return r.date!==date;});
+  renderAll();
+  setStatus('loading', 'Eliminando...');
+  apiPost({action:'delete', date:date}).then(function(res) {
+    setStatus('ok', res.ok ? 'Eliminado' : 'Error al eliminar');
+  }).catch(function(){ setStatus('err', 'Sin conexi\u00f3n'); });
+}
+
+// ── EXPORT CSV ──
+function exportCSV() {
+  if (!cache.length) { alert('No hay datos.'); return; }
+  var rows = 'fecha,caja_seguridad,balanz,fci_galicia,total\n';
+  cache.forEach(function(r){
+    rows += r.date+','+r.caja+','+r.balanz+','+(r.fci||0)+','+r.total+'\n';
+  });
+  var blob = new Blob([rows], {type:'text/csv;charset=utf-8;'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'finanzas_'+todayISO()+'.csv';
+  a.click();
+}
+
+// ── IMPORT CSV ──
+function importCSV(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var lines = e.target.result.trim().split(/\r?\n/);
+    if (lines.length < 2) { alert('CSV vacío.'); return; }
+    var sep = lines[0].indexOf(';') >= 0 ? ';' : ',';
+    var hdr = lines[0].toLowerCase().split(sep).map(function(h){return h.trim();});
+    var ci = {
+      date:   hdr.findIndex(function(h){return h.indexOf('fecha')>=0||h==='date';}),
+      caja:   hdr.findIndex(function(h){return h.indexOf('caja')>=0;}),
+      balanz: hdr.findIndex(function(h){return h.indexOf('balanz')>=0;}),
+      fci:    hdr.findIndex(function(h){return h.indexOf('fci')>=0||h.indexOf('galicia')>=0;})
+    };
+    if (ci.date<0||ci.caja<0||ci.balanz<0) { alert('Columnas no reconocidas.'); return; }
+    var imported = 0;
+    for (var i = 1; i < lines.length; i++) {
+      var line = lines[i].trim(); if (!line) continue;
+      var cols = line.split(sep).map(function(c){return c.trim();});
+      var ds = cols[ci.date]; if (!ds) continue;
+      var m = ds.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if (m) ds = m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(ds)) continue;
+      var caja=parseFloat(cols[ci.caja])||0, balanz=parseFloat(cols[ci.balanz])||0;
+      var fci=ci.fci>=0?(parseFloat(cols[ci.fci])||0):0;
+      var rec={date:ds,caja:caja,balanz:balanz,fci:fci,total:caja+balanz+fci};
+      var pos=cache.findIndex(function(r){return r.date===ds;});
+      if(pos>=0) cache[pos]=rec; else cache.push(rec);
+      imported++;
+    }
+    cache.sort(function(a,b){return a.date<b.date?-1:1;});
+    renderAll();
+    setStatus('loading','Subiendo '+imported+' registros a Sheets...');
+    apiPost({action:'seed',records:cache}).then(function(res){
+      setStatus('ok','Importados '+imported+' registros en Sheets');
+    }).catch(function(){
+      setStatus('err','Importado localmente, sin conexi\u00f3n con Sheets');
+    });
+    var msg=document.getElementById('smsg');
+    msg.textContent='\u2713 '+imported+' registros importados.';
+    setTimeout(function(){msg.textContent='';},4000);
+  };
+  reader.readAsText(file);
+  event.target.value='';
+}
+
+// ── CHART ──
+var chartInst = null;
+function renderChart(h) {
+  var labels = h.map(function(r){return ddisp(r.date);});
+  var dB=h.map(function(r){return r.balanz||0;});
+  var dC=h.map(function(r){return r.caja||0;});
+  var dF=h.map(function(r){return r.fci||0;});
+  var rng=document.getElementById('cr');
+  if(h.length>=2) rng.textContent=labels[0]+' \u2192 '+labels[h.length-1];
+  else if(h.length===1) rng.textContent=labels[0];
+  else rng.textContent='\u2014';
+  var ctx=document.getElementById('myChart').getContext('2d');
+  var gB=ctx.createLinearGradient(0,0,0,220);
+  gB.addColorStop(0,'rgba(96,165,250,0.75)');gB.addColorStop(1,'rgba(96,165,250,0.25)');
+  var gC=ctx.createLinearGradient(0,0,0,220);
+  gC.addColorStop(0,'rgba(201,168,76,0.80)');gC.addColorStop(1,'rgba(201,168,76,0.30)');
+  var gF=ctx.createLinearGradient(0,0,0,220);
+  gF.addColorStop(0,'rgba(74,222,128,0.80)');gF.addColorStop(1,'rgba(74,222,128,0.30)');
+  var pr=h.length<=30?3:(h.length<=120?1:0);
+  if(chartInst) chartInst.destroy();
+  chartInst=new Chart(ctx,{
+    type:'line',
+    data:{labels:labels,datasets:[
+      {label:'Balanz',data:dB,fill:'origin',backgroundColor:gB,borderColor:'#60a5fa',
+       borderWidth:1.5,pointRadius:pr,pointHoverRadius:6,pointBackgroundColor:'#60a5fa',
+       pointBorderColor:'#0d0f14',pointBorderWidth:1,tension:0.38,order:3},
+      {label:'Caja de Seguridad',data:dC,fill:'-1',backgroundColor:gC,borderColor:'#c9a84c',
+       borderWidth:1.5,pointRadius:pr,pointHoverRadius:6,pointBackgroundColor:'#c9a84c',
+       pointBorderColor:'#0d0f14',pointBorderWidth:1,tension:0.38,order:2},
+      {label:'FCI Galicia',data:dF,fill:'-1',backgroundColor:gF,borderColor:'#4ade80',
+       borderWidth:1.5,pointRadius:pr,pointHoverRadius:6,pointBackgroundColor:'#4ade80',
+       pointBorderColor:'#0d0f14',pointBorderWidth:1,tension:0.38,order:1}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#1a2035',borderColor:'#2e3547',borderWidth:1,
+          titleColor:'#9ca3af',bodyColor:'#e8eaf0',
+          titleFont:{family:'DM Mono',size:11},bodyFont:{family:'DM Mono',size:12},
+          padding:12,
+          callbacks:{
+            label:function(c){return '  '+c.dataset.label+': '+fmt(c.parsed.y);},
+            footer:function(items){
+              var t=items.reduce(function(s,i){return s+i.parsed.y;},0);
+              return '  Total: '+fmt(t);
+            }
+          },
+          footerColor:'#c9a84c',footerFont:{family:'DM Mono',size:12,weight:'500'}
+        }
+      },
+      scales:{
+        x:{stacked:true,grid:{color:'rgba(255,255,255,0.04)',drawTicks:false},
+           ticks:{color:'#6b7280',font:{family:'DM Mono',size:10},maxTicksLimit:7,maxRotation:40},
+           border:{color:'rgba(255,255,255,0.07)'}},
+        y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)',drawTicks:false},
+           ticks:{color:'#6b7280',font:{family:'DM Mono',size:10},
+             callback:function(v){
+               if(v>=1000000)return '$'+(v/1000000).toFixed(1)+'M';
+               if(v>=1000)return '$'+(v/1000).toFixed(0)+'k';
+               return '$'+v;
+             }},
+           border:{color:'rgba(255,255,255,0.07)'}}
+      }
+    }
+  });
+}
+
+// ── TABLE ──
+function renderTable(h) {
+  var tb=document.getElementById('tb');
+  var es=document.getElementById('es');
+  tb.innerHTML='';
+  if(!h.length){es.style.display='block';return;}
+  es.style.display='none';
+  h.slice().reverse().forEach(function(r){
+    var tr=document.createElement('tr');
+    tr.innerHTML=
+      '<td class="dt">'+ddisp(r.date)+'</td>'+
+      '<td>'+fmt(r.caja)+'</td>'+
+      '<td>'+fmt(r.balanz)+'</td>'+
+      '<td>'+fmt(r.fci||0)+'</td>'+
+      '<td class="dtt">'+fmt(r.total)+'</td>'+
+      '<td><button class="xb" onclick="delRec(\''+r.date+'\')">&#x2715;</button></td>';
+    tb.appendChild(tr);
+  });
+}
+
+function renderAll(){renderChart(cache);renderTable(cache);}
+
+// ── INIT ──
+loadFromSheet();
+</script>
+</body>
+</html>
