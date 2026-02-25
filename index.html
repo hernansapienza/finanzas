@@ -242,6 +242,7 @@ function loadFromSheet() {
       cache = res.records.map(function(r) {
         return {date:toISO(r.date), caja:r.caja, balanz:r.balanz, fci:r.fci||0, total:r.total};
       });
+      fillLatest();
       seeded = true;
       setStatus('ok', 'Conectado \u2022 ' + cache.length + ' registros');
       renderAll();
@@ -484,6 +485,16 @@ function renderTable(h) {
 }
 
 function renderAll(){renderChart(cache);renderTable(cache);}
+
+// ── FILL FIELDS WITH LATEST RECORD ──
+function fillLatest() {
+  if (!cache.length) return;
+  var last = cache[cache.length - 1];
+  document.getElementById('caja').value   = last.caja   || '';
+  document.getElementById('balanz').value = last.balanz || '';
+  document.getElementById('fci').value    = last.fci    || '';
+  calc();
+}
 
 // ── INIT ──
 loadFromSheet();
