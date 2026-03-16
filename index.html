@@ -705,29 +705,34 @@ function toggleDataset(idx) {
     btns.forEach(function(b) { b.classList.add('active'); b.classList.remove('inactive'); });
   } else {
     var dsIdx = parseInt(idx);
-    var allActive = true;
-    chartInst.data.datasets.forEach(function(ds, i) {
-      if (i !== dsIdx && chartInst.isDatasetVisible(i)) allActive = false;
-    });
-
-    if (allActive && chartInst.isDatasetVisible(dsIdx)) {
-      // Solo este está visible — volver a mostrar todos
-      chartInst.data.datasets.forEach(function(ds, i) {
-        chartInst.setDatasetVisibility(i, true);
-      });
+    // Toggle individual: si está visible lo oculta, si está oculto lo muestra
+    var isVisible = chartInst.isDatasetVisible(dsIdx);
+    // No permitir que queden todos ocultos
+    var visibleCount = 0;
+    chartInst.data.datasets.forEach(function(ds, i) { if (chartInst.isDatasetVisible(i)) visibleCount++; });
+    if (isVisible && visibleCount === 1) {
+      // Es el último visible — restaurar todos
+      chartInst.data.datasets.forEach(function(ds, i) { chartInst.setDatasetVisibility(i, true); });
       btns.forEach(function(b) { b.classList.add('active'); b.classList.remove('inactive'); });
-    } else {
-      // Mostrar solo este
-      chartInst.data.datasets.forEach(function(ds, i) {
-        chartInst.setDatasetVisibility(i, i === dsIdx);
-      });
-      btns.forEach(function(b) {
-        var bIdx = b.getAttribute('data-ds');
-        if (bIdx === 'all') { b.classList.remove('active'); b.classList.add('inactive'); }
-        else if (parseInt(bIdx) === dsIdx) { b.classList.add('active'); b.classList.remove('inactive'); }
-        else { b.classList.remove('active'); b.classList.add('inactive'); }
-      });
+      chartInst.update();
+      return;
     }
+    chartInst.setDatasetVisibility(dsIdx, !isVisible);
+    // Actualizar estado del botón tocado
+    btns.forEach(function(b) {
+      var bIdx = b.getAttribute('data-ds');
+      if (bIdx === 'all') {
+        // "Todos" activo solo si todos están visibles
+        var allVis = true;
+        chartInst.data.datasets.forEach(function(ds, i) { if (!chartInst.isDatasetVisible(i)) allVis = false; });
+        b.classList.toggle('active', allVis);
+        b.classList.toggle('inactive', !allVis);
+      } else {
+        var vis = chartInst.isDatasetVisible(parseInt(bIdx));
+        b.classList.toggle('active', vis);
+        b.classList.toggle('inactive', !vis);
+      }
+    });
   }
   chartInst.update();
 }
