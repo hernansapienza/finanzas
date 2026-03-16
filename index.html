@@ -78,6 +78,11 @@ hr.thick{border-top-color:var(--border-light)}
 .leg{display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap}
 .li{display:flex;align-items:center;gap:.35rem;font-size:.65rem;color:var(--muted)}
 .ld{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.leg-btn{cursor:pointer;padding:.2rem .5rem;border-radius:6px;transition:all .15s;border:1px solid transparent;user-select:none}
+.leg-btn:hover{background:rgba(255,255,255,.06);border-color:var(--border-light)}
+.leg-btn.active{opacity:1}
+.leg-btn.inactive{opacity:.35}
+.leg-btn[data-ds="all"]{border-color:var(--gold-dim);background:rgba(201,168,76,.08)}
 .filt{display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap}
 .filt select,.filt input[type=date]{background:rgba(255,255,255,.04);border:1px solid var(--border-light);
   border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:.68rem;
@@ -153,10 +158,11 @@ tbody td:not(:first-child){text-align:right}
     <span class="ct">Evoluci&#xF3;n del Portfolio</span>
     <span class="cs" id="cr">&#x2014;</span>
   </div>
-  <div class="leg">
-    <div class="li"><div class="ld" style="background:#60a5fa"></div>Balanz</div>
-    <div class="li"><div class="ld" style="background:#9f1239"></div>Caja</div>
-    <div class="li"><div class="ld" style="background:#fb923c"></div>FCI Galicia</div>
+  <div class="leg" id="chartLegend">
+    <div class="li leg-btn active" data-ds="all" onclick="toggleDataset('all')"><div class="ld" style="background:var(--gold)"></div>Todos</div>
+    <div class="li leg-btn active" data-ds="0" onclick="toggleDataset('0')"><div class="ld" style="background:#fb923c"></div>FCI Galicia</div>
+    <div class="li leg-btn active" data-ds="1" onclick="toggleDataset('1')"><div class="ld" style="background:#9f1239"></div>Caja</div>
+    <div class="li leg-btn active" data-ds="2" onclick="toggleDataset('2')"><div class="ld" style="background:#60a5fa"></div>Balanz</div>
   </div>
   <div class="filt">
     <select id="filtPreset" onchange="applyPreset()">
@@ -165,7 +171,8 @@ tbody td:not(:first-child){text-align:right}
       <option value="3m">&#xDA;ltimos 3 meses</option>
       <option value="6m">&#xDA;ltimos 6 meses</option>
       <option value="1y">&#xDA;ltimo a&#xF1;o</option>
-      <option value="custom">Personalizado...</option>
+      <option value="ytd">Año en curso (YTD)</option>
+       <option value="custom">Personalizado...</option>
     </select>
     <div id="customDates" style="display:none">
       <input type="date" id="dateFrom" onchange="applyFilter()">
@@ -551,6 +558,9 @@ function applyPreset() {
   else if (val === '3m') from = offsetDate(to, -3);
   else if (val === '6m') from = offsetDate(to, -6);
   else if (val === '1y') from = offsetDate(to, -12);
+  else if (val === 'ytd') { from = new Date().getFullYear() + '-01-01'; }
+  var customDiv = document.getElementById('customDates');
+  if (customDiv) customDiv.style.display = (val === 'custom') ? 'flex' : 'none';
   var filtered = from ? cache.filter(function(r){return r.date >= from && r.date <= to;}) : cache;
   renderChart(filtered);
 }
@@ -574,6 +584,45 @@ function offsetDate(iso, months) {
 }
 
 function renderAll(){renderChart(cache);renderTable(cache);}
+
+function toggleDataset(idx) {
+  if (!chartInst) return;
+  var btns = document.querySelectorAll('.leg-btn');
+
+  if (idx === 'all') {
+    // Mostrar todos
+    chartInst.data.datasets.forEach(function(ds, i) {
+      chartInst.setDatasetVisibility(i, true);
+    });
+    btns.forEach(function(b) { b.classList.add('active'); b.classList.remove('inactive'); });
+  } else {
+    var dsIdx = parseInt(idx);
+    var allActive = true;
+    chartInst.data.datasets.forEach(function(ds, i) {
+      if (i !== dsIdx && chartInst.isDatasetVisible(i)) allActive = false;
+    });
+
+    if (allActive && chartInst.isDatasetVisible(dsIdx)) {
+      // Solo este está visible — volver a mostrar todos
+      chartInst.data.datasets.forEach(function(ds, i) {
+        chartInst.setDatasetVisibility(i, true);
+      });
+      btns.forEach(function(b) { b.classList.add('active'); b.classList.remove('inactive'); });
+    } else {
+      // Mostrar solo este
+      chartInst.data.datasets.forEach(function(ds, i) {
+        chartInst.setDatasetVisibility(i, i === dsIdx);
+      });
+      btns.forEach(function(b) {
+        var bIdx = b.getAttribute('data-ds');
+        if (bIdx === 'all') { b.classList.remove('active'); b.classList.add('inactive'); }
+        else if (parseInt(bIdx) === dsIdx) { b.classList.add('active'); b.classList.remove('inactive'); }
+        else { b.classList.remove('active'); b.classList.add('inactive'); }
+      });
+    }
+  }
+  chartInst.update();
+}
 
 // ── FILL FIELDS WITH LATEST RECORD ──
 function fillLatest() {
