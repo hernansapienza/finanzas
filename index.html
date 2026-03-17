@@ -114,8 +114,8 @@ html,body{
   flex:1;max-width:170px;
 }
 .iw:focus-within{border-color:var(--lime);box-shadow:0 0 0 3px var(--lime-glow)}
-.cur{color:var(--txt3);font-size:.75rem;font-weight:600;user-select:none;font-family:'JetBrains Mono',monospace}
-input[type=number]{
+.cur{color:var(--txt3);font-size:.68rem;font-weight:600;user-select:none;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+input[type=number],input[type=text]{
   background:transparent;border:none;outline:none;
   color:var(--txt);font-family:'JetBrains Mono',monospace;
   font-size:.88rem;width:100%;text-align:right;
@@ -243,20 +243,20 @@ tbody td:not(:first-child){text-align:right}
   <div class="slabel">Activos</div>
   <div class="row">
     <span class="lbl">Caja de Seguridad</span>
-    <div class="iw"><span class="cur">$</span><input type="number" id="caja" placeholder="0.00" step="0.01" min="0"></div>
+    <div class="iw"><span class="cur">U$D</span><input type="text" id="caja" inputmode="decimal" onblur="formatField(this.id)" onfocus="this.select()" placeholder="0.00" step="0.01" min="0"></div>
   </div>
   <div class="row">
     <span class="lbl">Balanz</span>
-    <div class="iw"><span class="cur">$</span><input type="number" id="balanz" placeholder="0.00" step="0.01" min="0"></div>
+    <div class="iw"><span class="cur">U$D</span><input type="text" id="balanz" inputmode="decimal" onblur="formatField(this.id)" onfocus="this.select()" placeholder="0.00" step="0.01" min="0"></div>
   </div>
   <div class="row">
     <span class="lbl">FCI Banco Galicia</span>
-    <div class="iw"><span class="cur">$</span><input type="number" id="fci" placeholder="0.00" step="0.01" min="0"></div>
+    <div class="iw"><span class="cur">U$D</span><input type="text" id="fci" inputmode="decimal" onblur="formatField(this.id)" onfocus="this.select()" placeholder="0.00" step="0.01" min="0"></div>
   </div>
   <hr class="div thick">
   <div class="tbox">
     <span class="tlbl">Total</span>
-    <span class="tval" id="total">$ 0.00</span>
+    <span class="tval" id="total">U$D 0,00</span>
   </div>
   <div class="brow">
     <button class="btn btn-s" id="saveBtn" onclick="saveRecord()">&#x1F4BE; Guardar hoy</button>
@@ -326,7 +326,9 @@ var SEED = [{"date":"2024-02-21","caja":14058.0,"balanz":0,"fci":0.0,"total":140
 
 // ── UTILS ──
 function fmt(n) {
-  return '$ ' + Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  var parts = Number(n).toFixed(2).split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return 'U$D ' + parts[0] + ',' + parts[1];
 }
 function todayISO() {
   var d = new Date();
@@ -356,10 +358,28 @@ function setStatus(state, txt) {
 }
 
 // ── CALC ──
+function fmtInput(n) {
+  if (n === '' || n === null || isNaN(n)) return '';
+  var parts = Number(n).toFixed(2).split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return parts[0] + ',' + parts[1];
+}
+function parseInput(id) {
+  var v = document.getElementById(id).value.trim();
+  // Remove thousand separators (.) then replace decimal comma with dot
+  v = v.replace(/\./g, '').replace(',', '.');
+  return parseFloat(v) || 0;
+}
+function formatField(id) {
+  var raw = parseInput(id);
+  var el  = document.getElementById(id);
+  if (raw > 0) el.value = fmtInput(raw);
+}
+
 function calc() {
-  var c = parseFloat(document.getElementById('caja').value) || 0;
-  var b = parseFloat(document.getElementById('balanz').value) || 0;
-  var f = parseFloat(document.getElementById('fci').value) || 0;
+  var c = parseInput('caja');
+  var b = parseInput('balanz');
+  var f = parseInput('fci');
   document.getElementById('total').textContent = fmt(c+b+f);
 }
 ['caja','balanz','fci'].forEach(function(id) {
@@ -749,9 +769,9 @@ function toggleDataset(idx) {
 function fillLatest() {
   if (!cache.length) return;
   var last = cache[cache.length - 1];
-  document.getElementById('caja').value   = last.caja   || '';
-  document.getElementById('balanz').value = last.balanz || '';
-  document.getElementById('fci').value    = last.fci    || '';
+  document.getElementById('caja').value   = fmtInput(last.caja   || 0);
+  document.getElementById('balanz').value = fmtInput(last.balanz || 0);
+  document.getElementById('fci').value    = fmtInput(last.fci    || 0);
   calc();
 }
 
