@@ -448,9 +448,9 @@ function setBtns(disabled) {
 
 // ── SAVE RECORD ──
 function saveRecord() {
-  var c = parseFloat(document.getElementById('caja').value) || 0;
-  var b = parseFloat(document.getElementById('balanz').value) || 0;
-  var f = parseFloat(document.getElementById('fci').value) || 0;
+  var c = parseInput('caja');
+  var b = parseInput('balanz');
+  var f = parseInput('fci');
   var t = c + b + f;
   var td = todayISO();
   var rec = {date:td, caja:c, balanz:b, fci:f, total:t};
