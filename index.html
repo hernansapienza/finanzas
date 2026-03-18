@@ -243,15 +243,15 @@ tbody td:not(:first-child){text-align:right}
   <div class="slabel">Activos</div>
   <div class="row">
     <span class="lbl">Caja de Seguridad</span>
-    <div class="iw"><span class="cur">U$D</span><input type="text" id="caja" inputmode="decimal" onblur="formatField(this.id)" onfocus="this.select()" placeholder="0.00" step="0.01" min="0"></div>
+    <div class="iw"><span class="cur">U$D</span><input type="number" id="caja" step="0.01" min="0" placeholder="0" placeholder="0.00" step="0.01" min="0"></div>
   </div>
   <div class="row">
     <span class="lbl">Balanz</span>
-    <div class="iw"><span class="cur">U$D</span><input type="text" id="balanz" inputmode="decimal" onblur="formatField(this.id)" onfocus="this.select()" placeholder="0.00" step="0.01" min="0"></div>
+    <div class="iw"><span class="cur">U$D</span><input type="number" id="balanz" step="0.01" min="0" placeholder="0" placeholder="0.00" step="0.01" min="0"></div>
   </div>
   <div class="row">
     <span class="lbl">FCI Banco Galicia</span>
-    <div class="iw"><span class="cur">U$D</span><input type="text" id="fci" inputmode="decimal" onblur="formatField(this.id)" onfocus="this.select()" placeholder="0.00" step="0.01" min="0"></div>
+    <div class="iw"><span class="cur">U$D</span><input type="number" id="fci" step="0.01" min="0" placeholder="0" placeholder="0.00" step="0.01" min="0"></div>
   </div>
   <hr class="div thick">
   <div class="tbox">
@@ -377,9 +377,9 @@ function formatField(id) {
 }
 
 function calc() {
-  var c = parseInput('caja');
-  var b = parseInput('balanz');
-  var f = parseInput('fci');
+  var c = parseFloat(document.getElementById('caja').value) || 0;
+  var b = parseFloat(document.getElementById('balanz').value) || 0;
+  var f = parseFloat(document.getElementById('fci').value) || 0;
   document.getElementById('total').textContent = fmt(c+b+f);
 }
 ['caja','balanz','fci'].forEach(function(id) {
@@ -448,9 +448,9 @@ function setBtns(disabled) {
 
 // ── SAVE RECORD ──
 function saveRecord() {
-  var c = parseInput('caja');
-  var b = parseInput('balanz');
-  var f = parseInput('fci');
+  var c = parseFloat(document.getElementById('caja').value) || 0;
+  var b = parseFloat(document.getElementById('balanz').value) || 0;
+  var f = parseFloat(document.getElementById('fci').value) || 0;
   var t = c + b + f;
   var td = todayISO();
   var rec = {date:td, caja:c, balanz:b, fci:f, total:t};
@@ -769,9 +769,9 @@ function toggleDataset(idx) {
 function fillLatest() {
   if (!cache.length) return;
   var last = cache[cache.length - 1];
-  document.getElementById('caja').value   = fmtInput(last.caja   || 0);
-  document.getElementById('balanz').value = fmtInput(last.balanz || 0);
-  document.getElementById('fci').value    = fmtInput(last.fci    || 0);
+  document.getElementById('caja').value   = last.caja   || '';
+  document.getElementById('balanz').value = last.balanz || '';
+  document.getElementById('fci').value    = last.fci    || '';
   calc();
 }
 
