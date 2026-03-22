@@ -259,6 +259,10 @@ tbody td:not(:first-child){text-align:right}
     <span class="tlbl">Total</span>
     <span class="tval" id="total">U$D 0,00</span>
   </div>
+  <div class="tbox" id="tbox-ars" style="margin-top:.4rem;background:rgba(255,255,255,.04);border-color:var(--bdr2)">
+    <span class="tlbl" style="color:var(--txt3)">En pesos &nbsp;<span id="mep-badge" style="font-size:.55rem;background:var(--s3);border:1px solid var(--bdr2);padding:.1rem .4rem;border-radius:4px;color:var(--txt3)">cargando MEP...</span></span>
+    <span class="tval" id="total-ars" style="color:var(--txt2)">&#x2014;</span>
+  </div>
   <div class="brow">
     <button class="btn btn-s" id="saveBtn" onclick="saveRecord()">&#x1F4BE; Guardar hoy</button>
   </div>
@@ -377,11 +381,53 @@ function formatField(id) {
   if (raw > 0) el.value = fmtInput(raw);
 }
 
+// ── MEP en tiempo real ──
+var mepVal = null;
+var mepTimer = null;
+
+function fmtARS(n) {
+  var parts = Number(n).toFixed(2).split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return '$ ' + parts[0] + ',' + parts[1];
+}
+
+function fetchMEP() {
+  fetch('https://api.argentinadatos.com/v1/cotizaciones/dolares/mep')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      var arr = Array.isArray(data) ? data : [];
+      // Last item is most recent
+      var last = arr.length ? arr[arr.length - 1] : null;
+      var v = last ? parseFloat(last.venta || last.compra || 0) : 0;
+      if (v > 0) {
+        mepVal = v;
+        var badge = document.getElementById('mep-badge');
+        if (badge) badge.textContent = 'MEP $' + Math.round(v).toLocaleString('es-AR');
+        calc(); // refresh ARS total
+      }
+    })
+    .catch(function() {
+      var badge = document.getElementById('mep-badge');
+      if (badge) badge.textContent = 'MEP no disponible';
+    });
+}
+
 function calc() {
   var c = parseFloat(document.getElementById('caja').value) || 0;
   var b = parseFloat(document.getElementById('balanz').value) || 0;
   var f = parseFloat(document.getElementById('fci').value) || 0;
-  document.getElementById('total').textContent = fmt(c+b+f);
+  var total = c + b + f;
+  document.getElementById('total').textContent = fmt(total);
+  var arsEl = document.getElementById('total-ars');
+  if (arsEl) {
+    if (mepVal && total > 0) {
+      arsEl.textContent = fmtARS(total * mepVal);
+    } else if (total === 0) {
+      arsEl.textContent = fmtARS(0);
+    } else {
+      arsEl.textContent = '—';
+    }
+  }
 }
 ['caja','balanz','fci'].forEach(function(id) {
   document.getElementById(id).addEventListener('input', calc);
@@ -778,6 +824,8 @@ function fillLatest() {
 
 // ── INIT ──
 loadFromSheet();
+fetchMEP();
+setInterval(fetchMEP, 5 * 60 * 1000);
 </script>
 </body>
 </html>
