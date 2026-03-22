@@ -391,25 +391,86 @@ function fmtARS(n) {
   return '$ ' + parts[0] + ',' + parts[1];
 }
 
-function fetchMEP() {
-  fetch('https://api.argentinadatos.com/v1/cotizaciones/dolares/mep')
-    .then(function(r){ return r.json(); })
+// ── Fuentes MEP en cascada ──
+var MEP_SOURCES = [
+  {
+    name: 'DolarApi',
+    url:  'https://dolarapi.com/v1/dolares/bolsa',
+    parse: function(d) { return parseFloat(d.venta || d.compra || 0); }
+  },
+  {
+    name: 'DolarApi (lista)',
+    url:  'https://dolarapi.com/v1/dolares',
+    parse: function(d) {
+      var arr = Array.isArray(d) ? d : [];
+      var mep = arr.find(function(x){ return x.casa==='bolsa'||x.nombre==='MEP'||x.casa==='mep'; });
+      return mep ? parseFloat(mep.venta || mep.compra || 0) : 0;
+    }
+  },
+  {
+    name: 'ArgentinaDatos',
+    url:  'https://api.argentinadatos.com/v1/cotizaciones/dolares/mep',
+    parse: function(d) {
+      var arr = Array.isArray(d) ? d : [];
+      var last = arr.length ? arr[arr.length-1] : null;
+      return last ? parseFloat(last.venta || last.compra || 0) : 0;
+    }
+  },
+  {
+    name: 'Bluelytics',
+    url:  'https://api.bluelytics.com.ar/v2/latest',
+    parse: function(d) {
+      // No tiene MEP directo; usa promedio blue como proxy
+      return d.blue ? parseFloat(d.blue.value_sell || 0) : 0;
+    }
+  },
+  {
+    name: 'CriptoYa',
+    url:  'https://criptoya.com/api/dolar',
+    parse: function(d) {
+      var mep = d.mep || d.bolsa || d.ccb || null;
+      if (mep) return parseFloat(mep.ask || mep.venta || mep.price || 0);
+      return 0;
+    }
+  }
+];
+
+function setBadge(txt, ok) {
+  var badge = document.getElementById('mep-badge');
+  if (!badge) return;
+  badge.textContent = txt;
+  badge.style.color = ok ? 'var(--green)' : 'var(--txt3)';
+}
+
+function tryMEPSource(index) {
+  if (index >= MEP_SOURCES.length) {
+    setBadge('MEP no disponible', false);
+    return;
+  }
+  var src = MEP_SOURCES[index];
+  fetch(src.url)
+    .then(function(r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    })
     .then(function(data) {
-      var arr = Array.isArray(data) ? data : [];
-      // Last item is most recent
-      var last = arr.length ? arr[arr.length - 1] : null;
-      var v = last ? parseFloat(last.venta || last.compra || 0) : 0;
+      var v = src.parse(data);
       if (v > 0) {
         mepVal = v;
-        var badge = document.getElementById('mep-badge');
-        if (badge) badge.textContent = 'MEP $' + Math.round(v).toLocaleString('es-AR');
-        calc(); // refresh ARS total
+        setBadge('MEP $' + Math.round(v).toLocaleString('es-AR') + ' \u00b7 ' + src.name, true);
+        calc();
+      } else {
+        tryMEPSource(index + 1);
       }
     })
     .catch(function() {
-      var badge = document.getElementById('mep-badge');
-      if (badge) badge.textContent = 'MEP no disponible';
+      tryMEPSource(index + 1);
     });
+}
+
+function fetchMEP() {
+  setBadge('cargando MEP...', false);
+  tryMEPSource(0);
 }
 
 function calc() {
