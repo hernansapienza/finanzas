@@ -178,6 +178,7 @@ hr.thick{border-top-color:var(--bdr2)}
 .leg{display:flex;gap:.5rem;margin-bottom:.75rem;flex-wrap:wrap}
 .li{display:flex;align-items:center;gap:.35rem;font-size:.68rem;font-weight:500;color:var(--txt2)}
 .ld{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.leg-btn[data-ds="3"] .ld{width:14px;height:2px;border-radius:1px;margin-top:1px}
 .leg-btn{
   cursor:pointer;padding:.2rem .55rem;border-radius:6px;
   transition:all .12s;border:1px solid transparent;user-select:none
@@ -284,6 +285,7 @@ tbody td:not(:first-child){text-align:right}
     <div class="li leg-btn active" data-ds="0" onclick="toggleDataset('0')"><div class="ld" style="background:#fb923c"></div>FCI Galicia</div>
     <div class="li leg-btn active" data-ds="1" onclick="toggleDataset('1')"><div class="ld" style="background:#c83250"></div>Caja</div>
     <div class="li leg-btn active" data-ds="2" onclick="toggleDataset('2')"><div class="ld" style="background:#1a6cf6"></div>Balanz</div>
+    <div class="li leg-btn active" data-ds="3" onclick="toggleDataset('3')"><div class="ld" style="background:#f0f1f3"></div>Total</div>
   </div>
   <div class="filt">
     <select id="filtPreset" onchange="applyPreset()">
@@ -684,49 +686,68 @@ function renderChart(h) {
   var pr = h.length<=30 ? 3 : (h.length<=120 ? 1 : 0);
   if(chartInst) chartInst.destroy();
 
+  var dT = h.map(function(r){return (r.fci||0)+(r.caja||0)+(r.balanz||0);});
+
   chartInst = new Chart(document.getElementById('myChart'), {
     type: 'line',
     data: {
       labels: labels,
       datasets: [
-        // Bottom band: FCI — orange
+        // Area: FCI Galicia — orange
         {
           label: 'FCI Galicia',
           data: dF,
           fill: 'origin',
-          backgroundColor: 'rgba(251,146,60,0.55)',
-          borderColor: 'rgba(251,146,60,0.85)',
+          backgroundColor: 'rgba(251,146,60,0.18)',
+          borderColor: 'rgba(251,146,60,0.80)',
           borderWidth: 1.5,
           pointRadius: pr, pointHoverRadius: 6,
           pointBackgroundColor: 'rgba(251,146,60,1)',
           pointBorderColor: '#0d0f14', pointBorderWidth: 1,
-          tension: 0.38
+          tension: 0.38,
+          order: 3
         },
-        // Middle band: Caja — bordeaux
+        // Area: Caja de Seguridad — bordeaux
         {
           label: 'Caja de Seguridad',
           data: dC,
-          fill: '-1',
-          backgroundColor: 'rgba(159,18,57,0.5)',
-          borderColor: 'rgba(200,50,80,0.85)',
+          fill: 'origin',
+          backgroundColor: 'rgba(200,50,80,0.18)',
+          borderColor: 'rgba(200,50,80,0.80)',
           borderWidth: 1.5,
           pointRadius: pr, pointHoverRadius: 6,
           pointBackgroundColor: 'rgba(200,50,80,1)',
           pointBorderColor: '#0d0f14', pointBorderWidth: 1,
-          tension: 0.38
+          tension: 0.38,
+          order: 2
         },
-        // Top band: Balanz — blue
+        // Area: Balanz — blue
         {
           label: 'Balanz',
           data: dB,
-          fill: '-1',
-          backgroundColor: 'rgba(26,108,246,0.3)',
-          borderColor: 'rgba(61,126,247,0.9)',
+          fill: 'origin',
+          backgroundColor: 'rgba(26,108,246,0.18)',
+          borderColor: 'rgba(61,126,247,0.85)',
           borderWidth: 1.5,
           pointRadius: pr, pointHoverRadius: 6,
           pointBackgroundColor: 'rgba(61,126,247,1)',
           pointBorderColor: '#0d0f14', pointBorderWidth: 1,
-          tension: 0.38
+          tension: 0.38,
+          order: 1
+        },
+        // Line: Total — white/bright
+        {
+          label: 'Total',
+          data: dT,
+          fill: false,
+          backgroundColor: 'rgba(240,241,243,1)',
+          borderColor: 'rgba(240,241,243,0.90)',
+          borderWidth: 2.5,
+          pointRadius: pr, pointHoverRadius: 7,
+          pointBackgroundColor: 'rgba(240,241,243,1)',
+          pointBorderColor: '#0d0f14', pointBorderWidth: 1.5,
+          tension: 0.38,
+          order: 0
         }
       ]
     },
@@ -741,20 +762,20 @@ function renderChart(h) {
           titleFont:{family:'DM Mono',size:11},bodyFont:{family:'DM Mono',size:12},
           padding:12,
           callbacks:{
-            label:function(c){return '  '+c.dataset.label+': '+fmt(c.parsed.y);},
-            footer:function(items){
-              var t=items.reduce(function(s,i){return s+i.parsed.y;},0);
-              return '  Total: '+fmt(t);
+            label:function(c){
+              if(c.dataset.label==='Total'){
+                return '  \u2014 Total: '+fmt(c.parsed.y);
+              }
+              return '  '+c.dataset.label+': '+fmt(c.parsed.y);
             }
-          },
-          footerColor:'#1a6cf6',footerFont:{family:'DM Mono',size:12,weight:'500'}
+          }
         }
       },
       scales:{
-        x:{stacked:true,grid:{color:'rgba(255,255,255,0.04)',drawTicks:false},
+        x:{grid:{color:'rgba(255,255,255,0.04)',drawTicks:false},
            ticks:{color:'#6b7280',font:{family:'DM Mono',size:10},maxTicksLimit:7,maxRotation:40},
            border:{color:'rgba(255,255,255,0.07)'}},
-        y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)',drawTicks:false},
+        y:{grid:{color:'rgba(255,255,255,0.04)',drawTicks:false},
            ticks:{color:'#6b7280',font:{family:'DM Mono',size:10},
              callback:function(v){
                if(v>=1000000)return '$'+(v/1000000).toFixed(1)+'M';
