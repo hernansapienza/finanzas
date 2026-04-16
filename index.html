@@ -58,25 +58,31 @@ input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner
 body { background: var(--bg); font-size: 14px; min-height: 100vh; }
 .page { max-width: 520px; margin: 0 auto; padding: 2rem 1rem 4rem; display: flex; flex-direction: column; gap: 1.25rem; }
 
-/* Grid Desktop y Alturas Fijas */
+/* =========================================
+   TARJETAS (ESTILOS BASE / MOBILE FIRST)
+   ========================================= */
+.card { background: var(--s1); border: 1px solid var(--bdr); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; }
+.chart-card { background: var(--s1); border: 1px solid var(--bdr); border-radius: 12px; padding: 1.5rem; }
+
+/* En celular, la tarjeta de la tabla tiene un alto fijo de 400px para que no sea infinita */
+.tcrd { background: var(--s1); border: 1px solid var(--bdr); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; height: 400px; }
+
+
+/* =========================================
+   GRID DESKTOP Y ALTURAS FIJAS (PC)
+   Esto sobreescribe el Mobile al final
+   ========================================= */
 @media(min-width:800px){
   .page { max-width: 1080px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; gap: 1.25rem; align-items: start; }
   .card { grid-column: 1; grid-row: 1; }
   .tcrd { grid-column: 2; grid-row: 1; }
   .chart-card { grid-column: 1 / -1; grid-row: 2; }
+  
+  /* Acá volvemos a igualar ambas tarjetas a 540px en la PC */
   .card, .tcrd { height: 540px; } 
   .cw { height: 300px; }
 }
 
-/* Cards */
-.card { background: var(--s1); border: 1px solid var(--bdr); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; }
-.chart-card { background: var(--s1); border: 1px solid var(--bdr); border-radius: 12px; padding: 1.5rem; }
-
-/* =========================================
-   LÍMITE DE ALTURA EN CELULAR
-   Se agrega height para forzar el scroll 
-   ========================================= */
-.tcrd { background: var(--s1); border: 1px solid var(--bdr); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; height: 400px; }
 
 /* Decoración del título */
 .title::after { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--lime); border-radius: 50%; margin-left: .45rem; vertical-align: middle; position: relative; top: -2px; }
