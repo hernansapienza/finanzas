@@ -71,7 +71,12 @@ body { background: var(--bg); font-size: 14px; min-height: 100vh; }
 /* Cards */
 .card { background: var(--s1); border: 1px solid var(--bdr); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; }
 .chart-card { background: var(--s1); border: 1px solid var(--bdr); border-radius: 12px; padding: 1.5rem; }
-.tcrd { background: var(--s1); border: 1px solid var(--bdr); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+
+/* =========================================
+   LÍMITE DE ALTURA EN CELULAR
+   Se agrega height para forzar el scroll 
+   ========================================= */
+.tcrd { background: var(--s1); border: 1px solid var(--bdr); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; height: 400px; }
 
 /* Decoración del título */
 .title::after { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--lime); border-radius: 50%; margin-left: .45rem; vertical-align: middle; position: relative; top: -2px; }
@@ -135,15 +140,13 @@ body { background: var(--bg); font-size: 14px; min-height: 100vh; }
 /* =========================================
    TABLA: Registro Semanal/Diario (Ultra Compacto)
    ========================================= */
-/* El contenedor de encabezado de la tarjeta (.th) usa flexbox con justify-content: space-between
-   para mantener el título (.tt) a la izquierda y el botón a la derecha */
 .th { padding: .75rem 1rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--bdr); flex-shrink: 0; }
 
 .tw { flex: 1; overflow-y: auto; overflow-x: auto; min-height: 0; }
 
 table { width: 100%; border-collapse: collapse; }
 
-/* Los ENCABEZADOS de las columnas de la tabla (Fecha, Caja, etc.) alineados al centro */
+/* Encabezados centrados */
 thead th { 
   position: sticky; top: 0; background: var(--s2); z-index: 10;
   padding: .4rem .3rem; text-align: center; font-size: .6rem; font-weight: 700; 
@@ -160,10 +163,10 @@ tbody td {
   white-space: nowrap; font-size: .68rem; font-weight: 500; letter-spacing: -0.02em;
 }
 
-/* Centramos la primera columna (Fechas) para que coincida con su encabezado centrado */
+/* Primera columna centrada */
 tbody td:first-child { text-align: center; }
 
-/* Alineamos los números (resto de las columnas) a la derecha */
+/* Números alineados a la derecha */
 tbody td:not(:first-child) { text-align: right; }
 
 .dt { color: var(--txt3); }
