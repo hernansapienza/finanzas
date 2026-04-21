@@ -96,7 +96,7 @@ body { background: var(--bg); font-size: 14px; min-height: 100vh; }
 /* Anillo */
 .summary-chart { width: 130px; height: 130px; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 
-/* Botones */
+/* Botones Principales */
 .brow { display: flex; gap: .5rem; margin-top: auto; }
 .btn { flex: 1; padding: .7rem .5rem; border-radius: 8px; border: none; cursor: pointer; font-size: .8rem; font-weight: 700; letter-spacing: .02em; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: .4rem; }
 .btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
@@ -105,6 +105,19 @@ body { background: var(--bg); font-size: 14px; min-height: 100vh; }
 .btn-s.ok { background: rgba(52,212,122,.15); border: 1px solid rgba(52,212,122,.3); color: var(--green); }
 .btn-c { background: var(--s3); border: 1px solid var(--bdr2); color: var(--txt2); }
 .btn-c:hover:not(:disabled) { background: var(--s2); color: var(--txt); transform: translateY(-1px); }
+
+/* =========================================
+   NUEVO: BOTÓN OCULTAR/MOSTRAR
+   ========================================= */
+.hide-btn {
+  background: transparent; border: 1px solid transparent; cursor: pointer;
+  display: flex; align-items: center; gap: .35rem;
+  color: var(--txt3); font-size: .65rem; font-weight: 800;
+  text-transform: uppercase; padding: .25rem .4rem; border-radius: 6px;
+  transition: all .15s; font-family: 'Manrope', sans-serif;
+  margin-top: -0.2rem;
+}
+.hide-btn:hover { background: var(--s3); border-color: var(--bdr2); color: var(--txt); }
 
 /* Status */
 .smsg { font-size: .65rem; color: var(--txt3); text-align: center; margin-top: .45rem; min-height: 1.2em; }
@@ -140,9 +153,7 @@ body { background: var(--bg); font-size: 14px; min-height: 100vh; }
    TABLA: Registro Semanal/Diario
    ========================================= */
 .th { padding: .75rem 1rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--bdr); flex-shrink: 0; }
-
 .tw { flex: 1; overflow-y: auto; overflow-x: auto; min-height: 0; }
-
 table { width: 100%; border-collapse: collapse; }
 
 thead th { 
@@ -155,11 +166,7 @@ thead th {
 tbody tr { border-bottom: 1px solid rgba(255,255,255,.03); transition: background .1s; }
 tbody tr:hover { background: rgba(255,255,255,.025); }
 
-tbody td { 
-  padding: .3rem .3rem; 
-  white-space: nowrap; font-size: .68rem; font-weight: 500; letter-spacing: -0.02em;
-}
-
+tbody td { padding: .3rem .3rem; white-space: nowrap; font-size: .68rem; font-weight: 500; letter-spacing: -0.02em; }
 tbody td:first-child { text-align: center; }
 tbody td:not(:first-child) { text-align: right; }
 
@@ -203,13 +210,25 @@ tbody td:not(:first-child) { text-align: right; }
 
   <div class="summary-grid">
     <div class="summary-info">
-      <span class="slabel">Patrimonio Total</span>
+      
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.5rem;">
+        <span class="slabel" style="margin-bottom:0;">Patrimonio Total</span>
+        <button id="eyeBtn" class="hide-btn" onclick="toggleVisibility()">
+          <svg id="eyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          <span id="eyeText">Ocultar</span>
+        </button>
+      </div>
+      
       <div class="tval-usd" id="total">U$D 0,00</div>
       <div class="ars-subline">
         <span id="mep-badge" class="mep-badge">Calculando MEP...</span>
         <span class="tval-ars" id="total-ars">&#x2014;</span>
       </div>
     </div>
+    
     <div class="summary-chart">
       <canvas id="donutChart"></canvas>
     </div>
@@ -280,7 +299,6 @@ var API = 'https://script.google.com/macros/s/AKfycbwMl6_E65FQsKsfdOTevehehPHWU2
 var cache = [];
 var seeded = false;
 
-// Datos de prueba reducidos para no saturar el código (se actualizarán solos al conectar a Sheets)
 var SEED = [
   {"date":"2025-09-29","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},
   {"date":"2025-09-30","caja":14058.0,"balanz":0,"fci":0.0,"total":14058.0},
@@ -313,6 +331,28 @@ function ddisp(iso) {
 function setStatus(state, txt) {
   document.getElementById('sdot').className = 'dot' + (state ? ' '+state : '');
   document.getElementById('stxt').textContent = txt;
+}
+
+// ── ESTADO GLOBAL DEL BOTÓN OCULTAR ──
+var isTotalVisible = true;
+
+function toggleVisibility() {
+  isTotalVisible = !isTotalVisible;
+  
+  var text = document.getElementById('eyeText');
+  var icon = document.getElementById('eyeIcon');
+  
+  if (isTotalVisible) {
+    text.textContent = 'Ocultar';
+    // Ícono de Ojo Abierto
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+  } else {
+    text.textContent = 'Mostrar';
+    // Ícono de Ojo Tachado
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+  }
+  
+  calc(); // Refresca los textos inmediatamente
 }
 
 // ── MEP ──
@@ -386,27 +426,35 @@ function updateDonut(c, b, f) {
   }
 }
 
+// ── FUNCION CALC: AHORA RESPETA EL BOTON DE PRIVACIDAD ──
 function calc() {
   var c = parseFloat(document.getElementById('caja').value) || 0;
   var b = parseFloat(document.getElementById('balanz').value) || 0;
   var f = parseFloat(document.getElementById('fci').value) || 0;
   var t = c + b + f;
   
-  document.getElementById('total').textContent = fmt(t);
+  var usdEl = document.getElementById('total');
   var arsEl = document.getElementById('total-ars');
-  if (arsEl) arsEl.textContent = (mepVal && t > 0) ? fmtARS(t * mepVal) : (t===0 ? fmtARS(0) : '—');
+  
+  // Condicional para mostrar los datos o los asteriscos ***
+  if (isTotalVisible) {
+    usdEl.textContent = fmt(t);
+    if (arsEl) arsEl.textContent = (mepVal && t > 0) ? fmtARS(t * mepVal) : (t===0 ? fmtARS(0) : '—');
+  } else {
+    usdEl.textContent = 'U$D ***';
+    if (arsEl) arsEl.textContent = 'ARS ***';
+  }
   
   updateDonut(c, b, f);
 }
 ['caja','balanz','fci'].forEach(function(id) { document.getElementById(id).addEventListener('input', calc); });
 
-// ── API / SHEET (AQUÍ ESTÁ LA MAGIA DEL CÁLCULO EN TIEMPO REAL) ──
+// ── API / SHEET ──
 function loadFromSheet() {
   setStatus('loading', 'Cargando datos...'); document.getElementById('saveBtn').disabled = true;
   fetch(API + '?action=get').then(function(r) { return r.json(); }).then(function(res) {
     if (res.records && res.records.length > 0) {
       cache = res.records.map(function(r) { 
-        // IGNORAMOS EL TOTAL DEL SHEET Y LO RECALCULAMOS DINÁMICAMENTE
         var c = parseFloat(r.caja) || 0;
         var b = parseFloat(r.balanz) || 0;
         var f = parseFloat(r.fci) || 0;
@@ -416,7 +464,6 @@ function loadFromSheet() {
     } else throw new Error();
     fillLatest(); renderAll(); document.getElementById('saveBtn').disabled = false;
   }).catch(function() {
-    // Si falla y usa el caché, también forzamos la matemática
     cache = SEED.map(function(r) {
       var c = parseFloat(r.caja) || 0;
       var b = parseFloat(r.balanz) || 0;
