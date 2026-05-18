@@ -252,7 +252,7 @@ tbody td:not(:first-child) { text-align: right; }
   </div>
   <div class="tw">
     <table>
-      <thead><tr><th>Fecha</th><th>Caja</th><th>Balanz</th><th>FCI</th><th>Total</th><th></th></tr></thead>
+      <thead><tr><th>Fecha</th><th>Efectivo</th><th>Balanz</th><th>FCI</th><th>Total</th><th></th></tr></thead>
       <tbody id="tb"></tbody>
     </table>
     <div class="es" id="es">Cargando...</div>
@@ -267,7 +267,7 @@ tbody td:not(:first-child) { text-align: right; }
   <div class="leg" id="chartLegend">
     <div class="li leg-btn active" data-ds="all" onclick="toggleDataset('all')"><div class="ld" style="background:var(--lime)"></div>Todos</div>
     <div class="li leg-btn active" data-ds="0" onclick="toggleDataset('0')"><div class="ld" style="background:#fb923c"></div>FCI Galicia</div>
-    <div class="li leg-btn active" data-ds="1" onclick="toggleDataset('1')"><div class="ld" style="background:#c83250"></div>Caja</div>
+    <div class="li leg-btn active" data-ds="1" onclick="toggleDataset('1')"><div class="ld" style="background:#c83250"></div>Efectivo</div>
     <div class="li leg-btn active" data-ds="2" onclick="toggleDataset('2')"><div class="ld" style="background:#1a6cf6"></div>Balanz</div>
     <div class="li leg-btn active" data-ds="3" onclick="toggleDataset('3')"><div class="ld" style="background:#f0f1f3"></div>Total</div>
   </div>
@@ -389,7 +389,7 @@ function updateDonut(c, b, f) {
     donutInst = new Chart(document.getElementById('donutChart'), {
       type: 'doughnut',
       data: {
-        labels: ['Caja', 'Balanz', 'FCI'],
+        labels: ['Efectivo', 'Balanz', 'FCI'],
         datasets: [{
           data: [c, b, f],
           backgroundColor: ['#c83250', '#1a6cf6', '#fb923c'],
@@ -519,7 +519,7 @@ function renderChart(h) {
       labels: labels,
       datasets: [
         { label: 'FCI Galicia', data: h.map(function(r){return r.fci||0;}), fill: 'origin', backgroundColor: 'rgba(251,146,60,0.18)', borderColor: 'rgba(251,146,60,0.8)', borderWidth: 1.5, pointRadius: pr, tension: 0.38, order: 3 },
-        { label: 'Caja', data: h.map(function(r){return r.caja||0;}), fill: 'origin', backgroundColor: 'rgba(200,50,80,0.18)', borderColor: 'rgba(200,50,80,0.8)', borderWidth: 1.5, pointRadius: pr, tension: 0.38, order: 2 },
+        { label: 'Efectivo', data: h.map(function(r){return r.caja||0;}), fill: 'origin', backgroundColor: 'rgba(200,50,80,0.18)', borderColor: 'rgba(200,50,80,0.8)', borderWidth: 1.5, pointRadius: pr, tension: 0.38, order: 2 },
         { label: 'Balanz', data: h.map(function(r){return r.balanz||0;}), fill: 'origin', backgroundColor: 'rgba(26,108,246,0.18)', borderColor: 'rgba(61,126,247,0.85)', borderWidth: 1.5, pointRadius: pr, tension: 0.38, order: 1 },
         { label: 'Total', data: h.map(function(r){return r.total;}), fill: false, backgroundColor: '#f0f1f3', borderColor: 'rgba(240,241,243,0.9)', borderWidth: 2.5, pointRadius: pr, tension: 0.38, order: 0 }
       ]
